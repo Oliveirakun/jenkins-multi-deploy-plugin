@@ -3,7 +3,16 @@
  	<f:entry title="${%Name}" field="name">
     	<f:textbox />
   	</f:entry>
+  	<f:section title="Docker Registry Configuration">
+  	    <f:entry title="Registry URL" field="dockerRegistryUrl">
+            <f:textbox />
+        </f:entry>
+        <f:entry field="dockerRegistryCredentialId" title="Registry Credentials">
+            <c:select />
+        </f:entry>
+    </f:section>
 
+    <f:section title="Projects Configuration">
     <f:repeatable var="projectInList" name="projects" items="${instance.projects}" minimum="0">
         <fieldset>
             <f:entry title="Project" field="name">
@@ -18,5 +27,6 @@
         </fieldset>
         <f:repeatableDeleteButton />
     </f:repeatable>
+    </f:section>
 
 </j:jelly>

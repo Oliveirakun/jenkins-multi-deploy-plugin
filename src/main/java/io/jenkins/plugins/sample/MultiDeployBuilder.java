@@ -5,7 +5,7 @@ import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
-import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import hudson.Extension;
 import hudson.FilePath;
@@ -18,7 +18,6 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
-import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.plaincredentials.FileCredentials;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -28,12 +27,15 @@ import org.kohsuke.stapler.QueryParameter;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.List;
 import java.util.UUID;
 
 public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
     private final String name;
     private List<ProjectRepo> projects;
+    private String dockerRegistryUrl;
+    private String dockerRegistryCredentialId;
 
     @DataBoundConstructor
     public MultiDeployBuilder(String name, List<ProjectRepo> projects) {
@@ -49,16 +51,56 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
         return projects;
     }
 
+    public String getDockerRegistryUrl() {
+        return dockerRegistryUrl;
+    }
+
+    public String getDockerRegistryCredentialId() {
+        return dockerRegistryCredentialId;
+    }
+
     @DataBoundSetter
     public void setProjects(List<ProjectRepo> projects) {
         this.projects = projects;
     }
 
+    @DataBoundSetter
+    public void setDockerRegistryUrl(String dockerRegistryUrl) {
+        this.dockerRegistryUrl = dockerRegistryUrl;
+    }
+
+    @DataBoundSetter
+    public void setDockerRegistryCredentialId(String dockerRegistryCredentialId) {
+        this.dockerRegistryCredentialId = dockerRegistryCredentialId;
+    }
+
     @Override
     public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
-       listener.getLogger().println("Hello MultiDeployBuilder: " + name);
-       for (ProjectRepo project : projects)
-            listener.getLogger().println("Project: " + project.getName() + " Deployed with success");
+        PrintStream logger = listener.getLogger();
+        logger.println("Hello MultiDeployBuilder: " + name);
+        for (ProjectRepo project : projects)
+            logger.println("Project: " + project.getName() + " Deployed with success");
+
+       StandardUsernamePasswordCredentials credentials = findRegistryCredentials(getDockerRegistryCredentialId());
+       logger.println("Docker username: " + credentials.getUsername());
+       logger.println("Docker password: " + credentials.getPassword());
+
+    }
+
+    private StandardUsernamePasswordCredentials findRegistryCredentials(String credentialsId) {
+        Item fakeProject = new FreeStyleProject(Jenkins.get(), "fake-" + UUID.randomUUID().toString());
+
+        StandardUsernamePasswordCredentials credentials = CredentialsMatchers.firstOrNull(
+                CredentialsProvider.lookupCredentials(
+                        StandardUsernamePasswordCredentials.class,
+                        fakeProject,
+                        ACL.SYSTEM,
+                        URIRequirementBuilder.fromUri("").build()
+                ),
+                CredentialsMatchers.withId(credentialsId)
+        );
+
+        return credentials;
     }
 
     @Extension
@@ -73,7 +115,7 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
             return FormValidation.ok();
         }
 
-        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item item, @QueryParameter String credentialsId) {
+        public ListBoxModel doFillDockerRegistryCredentialIdItems(@AncestorInPath Item item, @QueryParameter String credentialsId) {
             StandardListBoxModel result = new StandardListBoxModel();
 
             if (item == null) {
@@ -95,9 +137,36 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
                         ACL.SYSTEM,
                         fakeProject,
                         StandardCredentials.class,
-                        null,
-                        CredentialsMatchers.anyOf(new CredentialsMatcher[]{CredentialsMatchers.instanceOf(FileCredentials.class)}))
+                        URIRequirementBuilder.fromUri("").build(),
+                        CredentialsMatchers.anyOf(new CredentialsMatcher[]{CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class)}))
                 .includeCurrentValue(credentialsId);
+        }
+
+        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item item, @QueryParameter String credentialsId) {
+            StandardListBoxModel result = new StandardListBoxModel();
+
+            if (item == null) {
+                if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
+                    return result.includeCurrentValue(credentialsId);
+                }
+            } else {
+                if (!item.hasPermission(Item.EXTENDED_READ)
+                        && !item.hasPermission(CredentialsProvider.USE_ITEM)) {
+                    return result.includeCurrentValue(credentialsId);
+                }
+            }
+
+            Item fakeProject = new FreeStyleProject(Jenkins.get(), "fake-" + UUID.randomUUID().toString());
+
+            return result
+                    .includeEmptyValue()
+                    .includeMatchingAs(
+                            ACL.SYSTEM,
+                            fakeProject,
+                            StandardCredentials.class,
+                            URIRequirementBuilder.fromUri("").build(),
+                            CredentialsMatchers.anyOf(new CredentialsMatcher[]{CredentialsMatchers.instanceOf(FileCredentials.class)}))
+                    .includeCurrentValue(credentialsId);
         }
 
         public FormValidation doCheckCredentialsId(@AncestorInPath Item item, @QueryParameter String value) {

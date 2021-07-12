@@ -16,6 +16,7 @@ import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.apache.commons.io.FileUtils;
+import org.jenkinsci.plugins.docker.commons.tools.DockerToolInstaller;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -94,8 +95,8 @@ public class HelloWorldBuilderTest {
 
     @Test
     public void testKubernetesListNodes() throws IOException {
-//        String kubeConfigPath =  "/tmp/.kube/config";
-        String kubeConfigPath =  "/Users/francisoliveira/Estudos/Experimento - Mestrado/kubeConfig.yml";
+        String kubeConfigPath =  "/tmp/.kube/config";
+//        String kubeConfigPath =  "/Users/francisoliveira/Estudos/Experimento - Mestrado/kubeConfig.yml";
         Config config = Config.fromKubeconfig(FileUtils.readFileToString(new File(kubeConfigPath), StandardCharsets.UTF_8));
         KubernetesClient client = new DefaultKubernetesClient(config);
 
