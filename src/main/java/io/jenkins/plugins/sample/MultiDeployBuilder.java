@@ -81,10 +81,20 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
         for (ProjectRepo project : projects)
             logger.println("Project: " + project.getName() + " Deployed with success");
 
+       String tagName = run.getEnvironment(listener).get("GIT_TAG_NAME");
        StandardUsernamePasswordCredentials credentials = findRegistryCredentials(getDockerRegistryCredentialId());
-       logger.println("Docker username: " + credentials.getUsername());
-       logger.println("Docker password: " + credentials.getPassword());
 
+       CommandRunner runner = new CommandRunner(logger, workspace.toURI().getPath());
+       DockerAdapter dockerAdapter = new DockerAdapter(
+               credentials.getUsername(),
+               credentials.getPassword().getPlainText(),
+               getDockerRegistryUrl(),
+               runner
+       );
+       dockerAdapter.setTagName(tagName);
+       dockerAdapter.setProjectName(projects.get(0).getName());
+
+       dockerAdapter.buildAndPushImage();
     }
 
     private StandardUsernamePasswordCredentials findRegistryCredentials(String credentialsId) {
