@@ -1,11 +1,5 @@
 package io.jenkins.plugins.sample;
 
-import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.core.DefaultDockerClientConfig;
-import com.github.dockerjava.core.DockerClientConfig;
-import com.github.dockerjava.core.DockerClientImpl;
-import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
-import com.github.dockerjava.transport.DockerHttpClient;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Label;
@@ -16,7 +10,6 @@ import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.apache.commons.io.FileUtils;
-import org.jenkinsci.plugins.docker.commons.tools.DockerToolInstaller;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -78,7 +71,7 @@ public class HelloWorldBuilderTest {
         jenkins.assertLogContains("Bonjour, " + name, build);
     }
 
-//    @Test
+    @Test
     public void testScriptedPipeline() throws Exception {
         String agentLabel = "my-agent";
         jenkins.createOnlineSlave(Label.get(agentLabel));
@@ -119,17 +112,4 @@ public class HelloWorldBuilderTest {
 //        client.apps().deployments().delete(deploy);
 
     }
-
-    @Test
-    public void testDocker() {
-        DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
-        DockerHttpClient httpClient = new ApacheDockerHttpClient.Builder()
-                .dockerHost(config.getDockerHost())
-                .build();
-
-        DockerClient dockerClient = DockerClientImpl.getInstance(config, httpClient);
-        System.out.println("Qtd. images: " + dockerClient.listImagesCmd().exec().size());
-
-    }
-
 }

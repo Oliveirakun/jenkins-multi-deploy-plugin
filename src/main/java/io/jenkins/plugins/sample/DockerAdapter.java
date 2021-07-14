@@ -24,6 +24,10 @@ public class DockerAdapter {
         this.projectName = projectName;
     }
 
+    public void setCommandRunner(CommandRunner runner) {
+        this.commandRunner = runner;
+    }
+
     public String buildAndPushImage() {
         String version = String.format("%s/%s:%s", username, projectName, tagName);
         String cmd = String.format("docker buildx build --push --platform=linux/amd64,linux/arm64 --tag %s .", version);

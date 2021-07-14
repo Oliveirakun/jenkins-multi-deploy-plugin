@@ -28,23 +28,20 @@ import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 
 public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
-    private final String name;
     private List<ProjectRepo> projects;
     private String dockerRegistryUrl;
     private String dockerRegistryCredentialId;
 
     @DataBoundConstructor
-    public MultiDeployBuilder(String name, List<ProjectRepo> projects) {
-        this.name = name;
+    public MultiDeployBuilder(List<ProjectRepo> projects) {
         this.projects = projects;
-    }
-
-    public String getName() {
-        return name;
     }
 
     public List<ProjectRepo> getProjects() {
@@ -76,25 +73,32 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
 
     @Override
     public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
-        PrintStream logger = listener.getLogger();
-        logger.println("Hello MultiDeployBuilder: " + name);
-        for (ProjectRepo project : projects)
-            logger.println("Project: " + project.getName() + " Deployed with success");
-
-       String tagName = run.getEnvironment(listener).get("GIT_TAG_NAME");
+       PrintStream logger = listener.getLogger();
        StandardUsernamePasswordCredentials credentials = findRegistryCredentials(getDockerRegistryCredentialId());
 
-       CommandRunner runner = new CommandRunner(logger, workspace.toURI().getPath());
-       DockerAdapter dockerAdapter = new DockerAdapter(
-               credentials.getUsername(),
-               credentials.getPassword().getPlainText(),
-               getDockerRegistryUrl(),
-               runner
-       );
-       dockerAdapter.setTagName(tagName);
-       dockerAdapter.setProjectName(projects.get(0).getName());
+        CommandRunner runner = new CommandRunner(logger, workspace.toURI().getPath());
+        DockerAdapter dockerAdapter = new DockerAdapter(
+                credentials.getUsername(),
+                credentials.getPassword().getPlainText(),
+                getDockerRegistryUrl(),
+                runner
+        );
 
-       dockerAdapter.buildAndPushImage();
+       for (ProjectRepo project : projects) {
+           logger.println("*****************************************************************************");
+           logger.println("***************  Building project: " + project.getName() + "  **************");
+           logger.println("*****************************************************************************");
+
+           String projectRootPath = String.format("%s/%s", workspace.toURI().getPath(), project.getName());
+           String versionFilePath = String.format("%s/VERSION", projectRootPath);
+           String tagName = new String(Files.readAllBytes(Paths.get(versionFilePath)), StandardCharsets.UTF_8);
+
+           dockerAdapter.setTagName(tagName.trim());
+           dockerAdapter.setProjectName(project.getName());
+           dockerAdapter.setCommandRunner(new CommandRunner(logger, projectRootPath));
+
+           dockerAdapter.buildAndPushImage();
+       }
     }
 
     private StandardUsernamePasswordCredentials findRegistryCredentials(String credentialsId) {
