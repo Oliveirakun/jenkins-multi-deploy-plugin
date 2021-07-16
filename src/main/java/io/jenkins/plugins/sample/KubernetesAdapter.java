@@ -1,15 +1,21 @@
 package io.jenkins.plugins.sample;
 
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Node;
 import io.fabric8.kubernetes.api.model.NodeList;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.dsl.ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable;
 import org.apache.commons.io.IOUtils;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -30,11 +36,26 @@ public class KubernetesAdapter {
             Map<String,String> labels = node.getMetadata().getLabels();
             String hostname = labels.get("kubernetes.io/hostname");
             String arch = labels.get("kubernetes.io/arch");
-            String nodeName = String.format("%s - %s", hostname, arch);
+            String nodeName = String.format("%s : %s", hostname, arch);
             nodes.add(nodeName);
         }
 
         return nodes;
+    }
+
+    public void deploy(String node, String image, String manifest) {
+        try {
+            KubernetesClient client = new DefaultKubernetesClient(kubeConfig);
+            File manifestFile = File.createTempFile("manifest",".yml");
+            Files.write(Paths.get(manifestFile.getPath()), manifest.getBytes(StandardCharsets.UTF_8));
+
+            ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata> config =
+                    client.load(new FileInputStream(manifestFile));
+            config.delete();
+            config.apply();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void convertStreamToString(InputStream stream) {

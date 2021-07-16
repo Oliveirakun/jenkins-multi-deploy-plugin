@@ -18,6 +18,7 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
+import org.apache.commons.lang.text.StrSubstitutor;
 import org.jenkinsci.plugins.plaincredentials.FileCredentials;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -31,8 +32,7 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
     private List<ProjectRepo> projects;
@@ -84,6 +84,7 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
                 runner
         );
 
+       List<String> images = new ArrayList<String>();
        for (ProjectRepo project : projects) {
            logger.println("*****************************************************************************");
            logger.println("***************  Building project: " + project.getName() + "  **************");
@@ -97,7 +98,30 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
            dockerAdapter.setProjectName(project.getName());
            dockerAdapter.setCommandRunner(new CommandRunner(logger, projectRootPath));
 
-           dockerAdapter.buildAndPushImage();
+           String image = dockerAdapter.buildAndPushImage();
+           images.add(image);
+       }
+
+       for (int i = 0;i < images.size();i++) {
+           ProjectRepo project = projects.get(i);
+
+           logger.println("*****************************************************************************");
+           logger.println("***************  Deploying project: " + project.getName() + "  **************");
+           logger.println("*****************************************************************************");
+
+           InputStream stream = new DescriptorImpl().getKubeConfig(project.getCredentialsId());
+           KubernetesAdapter adapter = new KubernetesAdapter(stream);
+
+           String projectRootPath = String.format("%s/%s", workspace.toURI().getPath(), project.getName());
+           String manifestPath = String.format("%s/manifest/%s.yml", projectRootPath, project.getName());
+           String templateManifest = new String(Files.readAllBytes(Paths.get(manifestPath)), StandardCharsets.UTF_8);
+
+           Map<String,String> valuesMap = new HashMap<String,String>();
+           valuesMap.put("image",images.get(i));
+           valuesMap.put("arch",project.getArch());
+           String finalManifest = new StrSubstitutor(valuesMap).replace(templateManifest);
+
+           adapter.deploy(project.getNode(), images.get(i), finalManifest);
        }
     }
 
@@ -232,6 +256,4 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
         }
 
     }
-
-
 }

@@ -88,8 +88,8 @@ public class HelloWorldBuilderTest {
 
     @Test
     public void testKubernetesListNodes() throws IOException {
-        String kubeConfigPath =  "/tmp/.kube/config";
-//        String kubeConfigPath =  "/Users/francisoliveira/Estudos/Experimento - Mestrado/kubeConfig.yml";
+//        String kubeConfigPath =  "/tmp/.kube/config";
+        String kubeConfigPath =  "/Users/francisoliveira/Estudos/Experimento - Mestrado/kubeConfig.yml";
         Config config = Config.fromKubeconfig(FileUtils.readFileToString(new File(kubeConfigPath), StandardCharsets.UTF_8));
         KubernetesClient client = new DefaultKubernetesClient(config);
 
@@ -100,7 +100,7 @@ public class HelloWorldBuilderTest {
         }
     }
 
-    @Test
+//    @Test
     public void testKubernetesDeploy() throws IOException {
         String kubeConfigPath =  "/tmp/.kube/config";
         String manifestPath = "/tmp/nginx.yml";
