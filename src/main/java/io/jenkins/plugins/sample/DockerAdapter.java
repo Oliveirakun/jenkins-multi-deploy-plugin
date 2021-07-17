@@ -4,16 +4,14 @@ public class DockerAdapter {
     private String username;
     private String password;
     private String hostUrl;
-    private CommandRunner commandRunner;
     private String tagName;
     private String projectName;
+    private String projectRootPath;
 
-    public DockerAdapter(String username, String password, String hostUrl, CommandRunner cmd) {
+    public DockerAdapter(String username, String password, String hostUrl) {
         this.username = username;
         this.password = password;
         this.hostUrl = hostUrl;
-        this.commandRunner = cmd;
-        setLogin();
     }
 
     public void setTagName(String tagName) {
@@ -24,20 +22,26 @@ public class DockerAdapter {
         this.projectName = projectName;
     }
 
-    public void setCommandRunner(CommandRunner runner) {
-        this.commandRunner = runner;
+    public void setProjectRootPath(String projectRootPath) {
+        this.projectRootPath = projectRootPath;
     }
 
-    public String buildAndPushImage() {
-        String version = String.format("%s/%s:%s", username, projectName, tagName);
-        String cmd = String.format("docker buildx build --push --platform=linux/amd64,linux/arm64 --tag %s .", version);
-        commandRunner.execute(cmd);
-
-        return version;
-    }
-
-    private void setLogin() {
+    public String setLoginCmd() {
         String cmd = String.format("docker login -u %s -p %s %s", username, password, hostUrl);
-        commandRunner.execute(cmd);
+        return cmd;
+    }
+
+    public String buildAndPushImageCmd() {
+        String version = getImageTag();
+        String dockerFilePath = String.format("%s/Dockerfile", projectRootPath);
+        String cmd = String.format("docker buildx build -f \"%s\" --push --platform=linux/amd64,linux/arm64 --tag %s \"%s\"",
+                dockerFilePath, version, projectRootPath);
+
+        return cmd;
+    }
+
+    public String getImageTag() {
+        String version = String.format("%s/%s:%s", username, projectName, tagName);
+        return version;
     }
 }

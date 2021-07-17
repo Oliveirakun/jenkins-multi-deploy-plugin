@@ -76,19 +76,19 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
        PrintStream logger = listener.getLogger();
        StandardUsernamePasswordCredentials credentials = findRegistryCredentials(getDockerRegistryCredentialId());
 
-        CommandRunner runner = new CommandRunner(logger, workspace.toURI().getPath());
-        DockerAdapter dockerAdapter = new DockerAdapter(
-                credentials.getUsername(),
-                credentials.getPassword().getPlainText(),
-                getDockerRegistryUrl(),
-                runner
+       ScriptBuilder scriptBuilder =  new ScriptBuilder();
+       DockerAdapter dockerAdapter = new DockerAdapter(
+            credentials.getUsername(),
+            credentials.getPassword().getPlainText(),
+            getDockerRegistryUrl()
         );
+       scriptBuilder.appendCommand(dockerAdapter.setLoginCmd());
 
        List<String> images = new ArrayList<String>();
        for (ProjectRepo project : projects) {
-           logger.println("*****************************************************************************");
-           logger.println("***************  Building project: " + project.getName() + "  **************");
-           logger.println("*****************************************************************************");
+           scriptBuilder.appendMessage("*****************************************************************************");
+           scriptBuilder.appendMessage("***************  Building project: " + project.getName() + "  **************");
+           scriptBuilder.appendMessage("*****************************************************************************");
 
            String projectRootPath = String.format("%s/%s", workspace.toURI().getPath(), project.getName());
            String versionFilePath = String.format("%s/VERSION", projectRootPath);
@@ -96,11 +96,14 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
 
            dockerAdapter.setTagName(tagName.trim());
            dockerAdapter.setProjectName(project.getName());
-           dockerAdapter.setCommandRunner(new CommandRunner(logger, projectRootPath));
+           dockerAdapter.setProjectRootPath(projectRootPath);
 
-           String image = dockerAdapter.buildAndPushImage();
-           images.add(image);
+           scriptBuilder.appendCommand(dockerAdapter.buildAndPushImageCmd());
+           images.add(dockerAdapter.getImageTag());
        }
+
+       CommandRunner runner = new CommandRunner(logger, workspace.toURI().getPath());
+       runner.execute(scriptBuilder.build().getPath());
 
        for (int i = 0;i < images.size();i++) {
            ProjectRepo project = projects.get(i);
