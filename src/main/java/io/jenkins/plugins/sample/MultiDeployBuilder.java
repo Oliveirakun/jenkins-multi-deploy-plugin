@@ -146,16 +146,6 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
 
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
-        public FormValidation doCheckName(@QueryParameter String value)
-                throws IOException, ServletException {
-            if (value.length() == 0)
-                return FormValidation.error(Messages.HelloWorldBuilder_DescriptorImpl_errors_missingName());
-            if (value.length() < 4)
-                return FormValidation.warning(Messages.HelloWorldBuilder_DescriptorImpl_warnings_tooShort());
-
-            return FormValidation.ok();
-        }
-
         public ListBoxModel doFillDockerRegistryCredentialIdItems(@AncestorInPath Item item, @QueryParameter String credentialsId) {
             StandardListBoxModel result = new StandardListBoxModel();
 
@@ -255,8 +245,10 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
                 CredentialsMatchers.withId(credentialsId)
             );
 
+            if (credentials == null)
+                return null;
+
             return credentials.getContent();
         }
-
     }
 }

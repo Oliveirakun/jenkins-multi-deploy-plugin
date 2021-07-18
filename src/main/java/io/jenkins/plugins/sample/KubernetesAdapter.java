@@ -42,17 +42,22 @@ public class KubernetesAdapter {
     }
 
     public void deploy(String node, String image, String manifest) {
+        FileInputStream inputStream = null;
+
         try {
             KubernetesClient client = new DefaultKubernetesClient(kubeConfig);
             File manifestFile = File.createTempFile("manifest",".yml");
             Files.write(Paths.get(manifestFile.getPath()), manifest.getBytes(StandardCharsets.UTF_8));
 
+            inputStream = new FileInputStream(manifestFile);
             ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata> config =
-                    client.load(new FileInputStream(manifestFile));
+                    client.load(inputStream);
             config.delete();
             config.createOrReplace();
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            closeStream(inputStream);
         }
     }
 
@@ -63,11 +68,16 @@ public class KubernetesAdapter {
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            try {
+            closeStream(stream);
+        }
+    }
+
+    private void closeStream(InputStream stream) {
+        try {
+            if (stream != null)
                 stream.close();
-            } catch (IOException e) {
-                System.out.println("Error closing kubeConfig stream: " + e);
-            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
