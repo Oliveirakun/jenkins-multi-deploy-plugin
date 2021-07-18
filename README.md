@@ -1,8 +1,9 @@
-# demo
+# Multi-Deploy
 
 ## Introduction
 
-TODO Describe what your plugin does here
+Multi-deploy is a Jenkins plugin that brings DevOps to IoT world, offering the
+possibility to deploy applications to cloud, fog or mist.
 
 ## Getting started
 
