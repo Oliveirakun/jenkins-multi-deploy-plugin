@@ -120,8 +120,8 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
            String templateManifest = new String(Files.readAllBytes(Paths.get(manifestPath)), StandardCharsets.UTF_8);
 
            Map<String,String> valuesMap = new HashMap<String,String>();
-           valuesMap.put("image",images.get(i));
-           valuesMap.put("arch",project.getArch());
+           valuesMap.put("image", images.get(i));
+           valuesMap.put("location", project.getNode());
            String finalManifest = new StrSubstitutor(valuesMap).replace(templateManifest);
 
            adapter.deploy(project.getNode(), images.get(i), finalManifest);

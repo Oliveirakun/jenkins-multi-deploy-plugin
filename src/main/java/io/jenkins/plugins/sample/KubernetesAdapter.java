@@ -34,10 +34,8 @@ public class KubernetesAdapter {
         NodeList nodeList = client.nodes().list();
         for (Node node : nodeList.getItems()) {
             Map<String,String> labels = node.getMetadata().getLabels();
-            String hostname = labels.get("kubernetes.io/hostname");
-            String arch = labels.get("kubernetes.io/arch");
-            String nodeName = String.format("%s : %s", hostname, arch);
-            nodes.add(nodeName);
+            String location = labels.get("location");
+            nodes.add(location);
         }
 
         return nodes;
@@ -52,7 +50,7 @@ public class KubernetesAdapter {
             ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata> config =
                     client.load(new FileInputStream(manifestFile));
             config.delete();
-            config.apply();
+            config.createOrReplace();
         } catch (IOException e) {
             e.printStackTrace();
         }

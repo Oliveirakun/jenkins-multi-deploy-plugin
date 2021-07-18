@@ -37,14 +37,6 @@ public class ProjectRepo {
         return credentialsId;
     }
 
-    public String getNodeName() {
-        return node.split(":")[0].trim();
-    }
-
-    public String getArch() {
-        return node.split(":")[1].trim();
-    }
-
     @DataBoundSetter
     public void setCredentialId(String credentialsId) {
         this.credentialsId = credentialsId;
