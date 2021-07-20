@@ -9,7 +9,7 @@
         </f:entry>
     </f:section>
 
-    <f:section title="Projects Configuration">
+    <f:section title="Project(s) Configuration">
         <f:repeatable var="projectInList" name="projects" items="${instance.projects}" minimum="0">
              <f:entry title="Project" field="name">
                 <f:textbox value="${projectInList.name}" default="" />
@@ -23,4 +23,9 @@
             <f:repeatableDeleteButton />
         </f:repeatable>
     </f:section>
+    <f:advanced tittle="Advanced">
+        <f:entry field="fastDeploy" title="Fast deploy">
+            <f:checkbox/>
+        </f:entry>
+    </f:advanced>
 </j:jelly>

@@ -38,6 +38,7 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
     private List<ProjectRepo> projects;
     private String dockerRegistryUrl;
     private String dockerRegistryCredentialId;
+    private boolean fastDeploy;
 
     @DataBoundConstructor
     public MultiDeployBuilder(List<ProjectRepo> projects) {
@@ -56,6 +57,10 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
         return dockerRegistryCredentialId;
     }
 
+    public boolean isFastDeploy() {
+        return fastDeploy;
+    }
+
     @DataBoundSetter
     public void setProjects(List<ProjectRepo> projects) {
         this.projects = projects;
@@ -69,6 +74,11 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
     @DataBoundSetter
     public void setDockerRegistryCredentialId(String dockerRegistryCredentialId) {
         this.dockerRegistryCredentialId = dockerRegistryCredentialId;
+    }
+
+    @DataBoundSetter
+    public void setFastDeploy(boolean fastDeploy) {
+        this.fastDeploy = fastDeploy;
     }
 
     @Override
@@ -102,8 +112,10 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
            images.add(dockerAdapter.getImageTag());
        }
 
-       CommandRunner runner = new CommandRunner(logger, workspace.toURI().getPath());
-       runner.execute(scriptBuilder.build().getPath());
+       if (!fastDeploy) {
+           CommandRunner runner = new CommandRunner(logger, workspace.toURI().getPath());
+           runner.execute(scriptBuilder.build().getPath());
+       }
 
        for (int i = 0;i < images.size();i++) {
            ProjectRepo project = projects.get(i);
