@@ -1,8 +1,6 @@
 package io.jenkins.plugins.sample;
 
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.Node;
-import io.fabric8.kubernetes.api.model.NodeList;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -21,15 +19,15 @@ import java.util.List;
 import java.util.Map;
 
 public class KubernetesAdapter {
-    private Config kubeConfig;
+    private KubernetesClient client;
 
     public KubernetesAdapter(InputStream stream) {
-        convertStreamToString(stream);
+        Config kubeConfig = convertStreamToString(stream);
+        client = new DefaultKubernetesClient(kubeConfig);
     }
 
     public List<String> getNodes () {
         List<String> nodes = new ArrayList<String>();
-        KubernetesClient client = new DefaultKubernetesClient(kubeConfig);
 
         NodeList nodeList = client.nodes().list();
         for (Node node : nodeList.getItems()) {
@@ -45,7 +43,6 @@ public class KubernetesAdapter {
         FileInputStream inputStream = null;
 
         try {
-            KubernetesClient client = new DefaultKubernetesClient(kubeConfig);
             File manifestFile = File.createTempFile("manifest",".yml");
             Files.write(Paths.get(manifestFile.getPath()), manifest.getBytes(StandardCharsets.UTF_8));
 
@@ -61,12 +58,26 @@ public class KubernetesAdapter {
         }
     }
 
-    private void convertStreamToString(InputStream stream) {
+    public void createConfigMap(String projectName, Map<String,String> variables) {
+        ConfigMap configMap = new ConfigMapBuilder()
+                .withNewMetadata()
+                    .withName(String.format("%s-config", projectName))
+                    .withNamespace("default")
+                .endMetadata()
+                .withApiVersion("v1")
+                .withData(variables)
+                .build();
+
+        client.configMaps().createOrReplace(configMap);
+    }
+
+    private Config convertStreamToString(InputStream stream) {
         try {
             String content = IOUtils.toString(stream, StandardCharsets.UTF_8.name());
-            kubeConfig = Config.fromKubeconfig(content);
+            return Config.fromKubeconfig(content);
         } catch (IOException e) {
             e.printStackTrace();
+            return null;
         } finally {
             closeStream(stream);
         }

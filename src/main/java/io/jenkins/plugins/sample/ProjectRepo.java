@@ -7,6 +7,7 @@ public class ProjectRepo {
     private String name;
     private String node;
     private String credentialsId;
+    private String envVariables;
 
     @DataBoundConstructor
     public ProjectRepo(String name, String node, String credentialsId) {
@@ -40,5 +41,14 @@ public class ProjectRepo {
     @DataBoundSetter
     public void setCredentialId(String credentialsId) {
         this.credentialsId = credentialsId;
+    }
+
+    public String getEnvVariables() {
+        return envVariables;
+    }
+
+    @DataBoundSetter
+    public void setEnvVariables(String envVariables) {
+        this.envVariables = envVariables;
     }
 }

@@ -25,7 +25,6 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
-import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -127,6 +126,11 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
            InputStream stream = new DescriptorImpl().getKubeConfig(project.getCredentialsId());
            KubernetesAdapter adapter = new KubernetesAdapter(stream);
 
+           Map<String, String> envVariables = parseEnvVariables(project.getEnvVariables());
+           if (!envVariables.isEmpty()) {
+               adapter.createConfigMap(project.getName(), envVariables);
+           }
+
            String projectRootPath = String.format("%s/%s", workspace.toURI().getPath(), project.getName());
            String manifestPath = String.format("%s/manifest/%s.yml", projectRootPath, project.getName());
            String templateManifest = new String(Files.readAllBytes(Paths.get(manifestPath)), StandardCharsets.UTF_8);
@@ -154,6 +158,21 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
         );
 
         return credentials;
+    }
+
+    private Map<String, String> parseEnvVariables(String envs) {
+        Map<String, String> envVariables = new HashMap<>();
+
+        Arrays.stream(envs.split("\n")).forEach(env -> {
+            if (env.isEmpty())
+                return;
+
+            String key = env.split("=")[0];
+            String value = env.split("=")[1];
+            envVariables.put(key, value);
+        });
+
+        return envVariables;
     }
 
     @Extension
