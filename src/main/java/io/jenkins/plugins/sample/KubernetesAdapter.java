@@ -1,6 +1,10 @@
 package io.jenkins.plugins.sample;
 
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.Node;
+import io.fabric8.kubernetes.api.model.NodeList;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -20,10 +24,12 @@ import java.util.Map;
 
 public class KubernetesAdapter {
     private KubernetesClient client;
+    private List<EnvVar> varsList;
 
     public KubernetesAdapter(InputStream stream) {
         Config kubeConfig = convertStreamToString(stream);
         client = new DefaultKubernetesClient(kubeConfig);
+        varsList = new ArrayList<>();
     }
 
     public List<String> getNodes () {
@@ -49,8 +55,20 @@ public class KubernetesAdapter {
             inputStream = new FileInputStream(manifestFile);
             ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata> config =
                     client.load(inputStream);
-            config.delete();
-            config.createOrReplace();
+
+            config.get().forEach(obj -> {
+                if (obj.getKind().equals("Deployment") && !varsList.isEmpty()) {
+                    Deployment deployment = (Deployment) obj;
+                    deployment.getSpec().getTemplate().getSpec().getContainers().forEach(container -> {
+                        container.setEnv(varsList);
+                    });
+                    client.resource(deployment).delete();
+                    client.resource(deployment).createOrReplace();
+                } else {
+                    client.resource(obj).delete();
+                    client.resource(obj).createOrReplace();
+                }
+            });
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -58,17 +76,13 @@ public class KubernetesAdapter {
         }
     }
 
-    public void createConfigMap(String projectName, Map<String,String> variables) {
-        ConfigMap configMap = new ConfigMapBuilder()
-                .withNewMetadata()
-                    .withName(String.format("%s-config", projectName))
-                    .withNamespace("default")
-                .endMetadata()
-                .withApiVersion("v1")
-                .withData(variables)
-                .build();
-
-        client.configMaps().createOrReplace(configMap);
+    public void setEnvironmentVariables(String projectName, Map<String,String> variables) {
+        variables.forEach((key,value) -> {
+            EnvVar var = new EnvVar();
+            var.setName(key);
+            var.setValue(value);
+            varsList.add(var);
+        });
     }
 
     private Config convertStreamToString(InputStream stream) {

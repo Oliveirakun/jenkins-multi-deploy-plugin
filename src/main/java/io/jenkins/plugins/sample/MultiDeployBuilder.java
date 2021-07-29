@@ -126,11 +126,6 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
            InputStream stream = new DescriptorImpl().getKubeConfig(project.getCredentialsId());
            KubernetesAdapter adapter = new KubernetesAdapter(stream);
 
-           Map<String, String> envVariables = parseEnvVariables(project.getEnvVariables());
-           if (!envVariables.isEmpty()) {
-               adapter.createConfigMap(project.getName(), envVariables);
-           }
-
            String projectRootPath = String.format("%s/%s", workspace.toURI().getPath(), project.getName());
            String manifestPath = String.format("%s/manifest/%s.yml", projectRootPath, project.getName());
            String templateManifest = new String(Files.readAllBytes(Paths.get(manifestPath)), StandardCharsets.UTF_8);
@@ -139,6 +134,11 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
            valuesMap.put("image", images.get(i));
            valuesMap.put("location", project.getNode());
            String finalManifest = new StrSubstitutor(valuesMap).replace(templateManifest);
+
+           Map<String, String> envVariables = parseEnvVariables(project.getEnvVariables());
+           if (!envVariables.isEmpty()) {
+               adapter.setEnvironmentVariables(project.getName(), envVariables);
+           }
 
            adapter.deploy(project.getNode(), images.get(i), finalManifest);
        }
