@@ -167,8 +167,9 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
             if (env.isEmpty())
                 return;
 
-            String key = env.split("=")[0];
-            String value = env.split("=")[1];
+            String[] param = env.split("=", 2);
+            String key = param[0];
+            String value = param[1];
             envVariables.put(key, value);
         });
 
