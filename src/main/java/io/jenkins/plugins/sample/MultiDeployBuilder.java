@@ -37,7 +37,7 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
     private List<ProjectRepo> projects;
     private String dockerRegistryUrl;
     private String dockerRegistryCredentialId;
-    private boolean fastDeploy;
+    private boolean skipBuild;
 
     @DataBoundConstructor
     public MultiDeployBuilder(List<ProjectRepo> projects) {
@@ -56,8 +56,8 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
         return dockerRegistryCredentialId;
     }
 
-    public boolean isFastDeploy() {
-        return fastDeploy;
+    public boolean isSkipBuild() {
+        return skipBuild;
     }
 
     @DataBoundSetter
@@ -76,8 +76,8 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
     }
 
     @DataBoundSetter
-    public void setFastDeploy(boolean fastDeploy) {
-        this.fastDeploy = fastDeploy;
+    public void setSkipBuild(boolean skipBuild) {
+        this.skipBuild = skipBuild;
     }
 
     @Override
@@ -95,6 +95,11 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
 
        List<String> images = new ArrayList<String>();
        for (ProjectRepo project : projects) {
+           if (project.isOnlyDeploy()) {
+               images.add("");
+               continue;
+           }
+
            scriptBuilder.appendMessage("*****************************************************************************");
            scriptBuilder.appendMessage("***************  Building project: " + project.getName() + "  **************");
            scriptBuilder.appendMessage("*****************************************************************************");
@@ -111,7 +116,7 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
            images.add(dockerAdapter.getImageTag());
        }
 
-       if (!fastDeploy) {
+       if (!skipBuild) {
            CommandRunner runner = new CommandRunner(logger, workspace.toURI().getPath());
            runner.execute(scriptBuilder.build().getPath());
        }

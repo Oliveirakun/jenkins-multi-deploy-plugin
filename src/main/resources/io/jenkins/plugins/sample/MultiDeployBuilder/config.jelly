@@ -20,7 +20,10 @@
              <f:entry field="node" title="Choose where to deploy">
                 <f:select value="${projectInList.node}"/>
              </f:entry>
-             <f:advanced title="Environment variables">
+             <f:advanced title="Options">
+                <f:entry field="onlyDeploy" title="Only Deploy">
+                    <f:checkbox checked="${projectInList.onlyDeploy}"/>
+                </f:entry>
                 <f:entry field="envVariables" title="Environment variables">
                     <f:textarea value="${projectInList.envVariables}"/>
                 </f:entry>
@@ -29,7 +32,7 @@
         </f:repeatable>
     </f:section>
     <f:advanced title="Advanced">
-        <f:entry field="fastDeploy" title="Fast deploy">
+        <f:entry field="skipBuild" title="Skip Build">
             <f:checkbox/>
         </f:entry>
     </f:advanced>

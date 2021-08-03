@@ -8,6 +8,7 @@ public class ProjectRepo {
     private String node;
     private String credentialsId;
     private String envVariables;
+    private boolean onlyDeploy;
 
     @DataBoundConstructor
     public ProjectRepo(String name, String node, String credentialsId) {
@@ -50,5 +51,14 @@ public class ProjectRepo {
     @DataBoundSetter
     public void setEnvVariables(String envVariables) {
         this.envVariables = envVariables;
+    }
+
+    public boolean isOnlyDeploy() {
+        return onlyDeploy;
+    }
+
+    @DataBoundSetter
+    public void setOnlyDeploy(boolean onlyDeploy) {
+        this.onlyDeploy = onlyDeploy;
     }
 }
