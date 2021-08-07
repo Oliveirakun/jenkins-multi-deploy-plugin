@@ -62,7 +62,7 @@ public class ProjectRepo {
         this.onlyDeploy = onlyDeploy;
     }
 
-    public boolean isEdge() {
+    public boolean isOnEdge() {
         String role = node.split("#")[1];
         return role.equals("edge");
     }

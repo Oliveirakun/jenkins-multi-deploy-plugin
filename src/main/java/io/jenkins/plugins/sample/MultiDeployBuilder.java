@@ -135,9 +135,7 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
            String manifestPath = String.format("%s/manifest/%s.yml", projectRootPath, project.getName());
            String templateManifest = new String(Files.readAllBytes(Paths.get(manifestPath)), StandardCharsets.UTF_8);
 
-           Map<String,String> valuesMap = new HashMap<String,String>();
-           valuesMap.put("image", images.get(i));
-           valuesMap.put("location", project.getNodeLocation());
+           Map<String,String> valuesMap = Collections.singletonMap("image",  images.get(i));
            String finalManifest = new StrSubstitutor(valuesMap).replace(templateManifest);
 
            Map<String, String> envVariables = parseEnvVariables(project.getEnvVariables());
@@ -145,7 +143,7 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
                adapter.setEnvironmentVariables(project.getName(), envVariables);
            }
 
-           adapter.deploy(project.getNode(), images.get(i), finalManifest);
+           adapter.deploy(project, images.get(i), finalManifest);
        }
     }
 

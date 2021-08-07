@@ -18,10 +18,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class KubernetesAdapter {
     private KubernetesClient client;
@@ -51,7 +48,7 @@ public class KubernetesAdapter {
         return nodes;
     }
 
-    public void deploy(String node, String image, String manifest) {
+    public void deploy(ProjectRepo project, String image, String manifest) {
         FileInputStream inputStream = null;
 
         try {
@@ -63,11 +60,10 @@ public class KubernetesAdapter {
                     client.load(inputStream);
 
             config.get().forEach(obj -> {
-                if (obj.getKind().equals("Deployment") && !varsList.isEmpty()) {
+                if (obj.getKind().equals("Deployment")) {
                     Deployment deployment = (Deployment) obj;
-                    deployment.getSpec().getTemplate().getSpec().getContainers().forEach(container -> {
-                        container.setEnv(varsList);
-                    });
+                    adjustDeployment(project, deployment);
+
                     client.resource(deployment).delete();
                     client.resource(deployment).createOrReplace();
                 } else {
@@ -89,6 +85,20 @@ public class KubernetesAdapter {
             var.setValue(value);
             varsList.add(var);
         });
+    }
+
+    private void adjustDeployment(ProjectRepo project, Deployment deployment) {
+        if (!varsList.isEmpty()) {
+            deployment.getSpec().getTemplate().getSpec().getContainers().forEach(container -> {
+                container.setEnv(varsList);
+            });
+        }
+        if (project.isOnEdge()) {
+            deployment.getSpec().getTemplate().getSpec().setHostNetwork(true);
+        }
+
+        Map<String,String> selector = Collections.singletonMap("location", project.getNodeLocation());
+        deployment.getSpec().getTemplate().getSpec().setNodeSelector(selector);
     }
 
     private Config convertStreamToString(InputStream stream) {
