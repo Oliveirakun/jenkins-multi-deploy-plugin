@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,14 +33,19 @@ public class KubernetesAdapter {
         varsList = new ArrayList<>();
     }
 
-    public List<String> getNodes () {
-        List<String> nodes = new ArrayList<String>();
+    public Map<String,String> getNodes() {
+        Map<String,String> nodes = new HashMap<>();
 
         NodeList nodeList = client.nodes().list();
         for (Node node : nodeList.getItems()) {
             Map<String,String> labels = node.getMetadata().getLabels();
             String location = labels.get("location");
-            nodes.add(location);
+
+            if (node.getMetadata().getLabels().containsKey("node-role.kubernetes.io/edge")){
+                nodes.put(location, "edge");
+            } else {
+                nodes.put(location, "cloud");
+            }
         }
 
         return nodes;

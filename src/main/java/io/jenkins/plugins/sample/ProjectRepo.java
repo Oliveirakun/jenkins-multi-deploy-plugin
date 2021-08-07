@@ -61,4 +61,13 @@ public class ProjectRepo {
     public void setOnlyDeploy(boolean onlyDeploy) {
         this.onlyDeploy = onlyDeploy;
     }
+
+    public boolean isEdge() {
+        String role = node.split("#")[1];
+        return role.equals("edge");
+    }
+
+    public String getNodeLocation() {
+        return node.split("#")[0];
+    }
 }

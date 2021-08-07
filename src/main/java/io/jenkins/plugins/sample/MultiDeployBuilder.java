@@ -137,7 +137,7 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
 
            Map<String,String> valuesMap = new HashMap<String,String>();
            valuesMap.put("image", images.get(i));
-           valuesMap.put("location", project.getNode());
+           valuesMap.put("location", project.getNodeLocation());
            String finalManifest = new StrSubstitutor(valuesMap).replace(templateManifest);
 
            Map<String, String> envVariables = parseEnvVariables(project.getEnvVariables());
@@ -250,9 +250,10 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
 
             if (credentialsId != null && !credentialsId.isEmpty()) {
                 InputStream stream = getKubeConfig(credentialsId);
-                List<String> nodes = new KubernetesAdapter(stream).getNodes();
-                for (String node : nodes) {
-                    items.add(node);
+                Map<String,String> nodes = new KubernetesAdapter(stream).getNodes();
+                for (Map.Entry<String,String> node : nodes.entrySet()) {
+                    String value = String.format("%s#%s", node.getKey(), node.getValue());
+                    items.add(node.getKey(), value);
                 }
             }
 
