@@ -2,26 +2,35 @@
 
 ## Introduction
 
-Multi deploy plugin is a Jenkins plugin that brings DevOps to IoT world, offering the
-possibility to deploy applications to cloud, fog or mist.
+Multi deploy is a Jenkins plugin that brings DevOps to IoT world, offering the
+possibility to deploy applications to cloud, fog or mist. This project was created as part of my masters dissertation. 
+
+## Requirements
+
+- Java 8
+- Maven >= 3.8
 
 ## Getting started
 
-TODO Tell users how to configure your plugin here, include screenshots, pipeline examples and 
-configuration-as-code examples.
+To run an instance of Jenkins with this plugin installed, execute this command:
 
-## Issues
+``
+$ mvn hpi:run 
+``
 
-TODO Decide where you're going to host your issues, the default is Jenkins JIRA, but you can also enable GitHub issues,
-If you use GitHub issues there's no need for this section; else add the following line:
+To run unit tests, execute:
 
-Report issues and enhancements in the [Jenkins issue tracker](https://issues.jenkins-ci.org/).
+``
+$ mvn test 
+``
 
-## Contributing
+To use this plugin, you need first a git repository containing kubernetes manifest files, with all projects separated by directory. You can follow 
+the same layout in [swamp-simulator](https://github.com/Oliveirakun/swamp-simulator-manifests) repository.
 
-TODO review the default [CONTRIBUTING](https://github.com/jenkinsci/.github/blob/master/CONTRIBUTING.md) file and make sure it is appropriate for your plugin, if not then add your own one adapted from the base file
+With this plugin you can configure an application composed by many projects/services and choose where each service will be deployed. You also need to configure a docker registry to store your docker images, before configure the services.
+In the image below, you can see an example:
 
-Refer to our [contribution guidelines](https://github.com/jenkinsci/.github/blob/master/CONTRIBUTING.md)
+![Example](doc/images/jenkins-matopiba-1.png)
 
 ## LICENSE
 
