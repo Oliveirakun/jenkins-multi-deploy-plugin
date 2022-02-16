@@ -9,6 +9,7 @@ import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable;
+import io.jenkins.plugins.sample.dynamic.ObjectsManager;
 import org.apache.commons.io.IOUtils;
 
 import java.io.File;
@@ -59,16 +60,15 @@ public class KubernetesAdapter {
             ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata> config =
                     client.load(inputStream);
 
+            ObjectsManager manager = new ObjectsManager(client);
             config.get().forEach(obj -> {
                 if (obj.getKind().equals("Deployment")) {
                     Deployment deployment = (Deployment) obj;
                     adjustDeployment(project, deployment);
 
-                    client.resource(deployment).delete();
-                    client.resource(deployment).createOrReplace();
+                    manager.processAndDeploy(deployment, project.getNodeLocation());
                 } else {
-                    client.resource(obj).delete();
-                    client.resource(obj).createOrReplace();
+                    manager.processAndDeploy(obj, project.getNodeLocation());
                 }
             });
         } catch (IOException e) {
