@@ -5,6 +5,7 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Node;
 import io.fabric8.kubernetes.api.model.NodeList;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -65,8 +66,11 @@ public class KubernetesAdapter {
                 if (obj.getKind().equals("Deployment")) {
                     Deployment deployment = (Deployment) obj;
                     adjustDeployment(project, deployment);
-
                     manager.processAndDeploy(deployment, project.getNodeLocation());
+                } else if (obj.getKind().equals("StatefulSet")) {
+                    StatefulSet stf = (StatefulSet) obj;
+                    adjustStatefulSet(project, stf);
+                    manager.processAndDeploy(stf, project.getNodeLocation());
                 } else {
                     manager.processAndDeploy(obj, project.getNodeLocation());
                 }
@@ -99,6 +103,20 @@ public class KubernetesAdapter {
 
         Map<String,String> selector = Collections.singletonMap("location", project.getNodeLocation());
         deployment.getSpec().getTemplate().getSpec().setNodeSelector(selector);
+    }
+
+    private void adjustStatefulSet(ProjectRepo project, StatefulSet stf) {
+        if (!varsList.isEmpty()) {
+            stf.getSpec().getTemplate().getSpec().getContainers().forEach(container -> {
+                container.setEnv(varsList);
+            });
+        }
+        if (project.isOnEdge()) {
+            stf.getSpec().getTemplate().getSpec().setHostNetwork(true);
+        }
+
+        Map<String,String> selector = Collections.singletonMap("location", project.getNodeLocation());
+        stf.getSpec().getTemplate().getSpec().setNodeSelector(selector);
     }
 
     private Config convertStreamToString(InputStream stream) {
