@@ -6,10 +6,12 @@ import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.client.KubernetesClient;
 
 public class ObjectsManager {
-    KubernetesClient client;
+    private final KubernetesClient client;
+    private final MigrationManager migrationManager;
 
     public ObjectsManager(KubernetesClient client) {
         this.client = client;
+        this.migrationManager = new MigrationManager(client);
     }
 
     public void processAndDeploy(HasMetadata obj, String nodeLocation) {
@@ -25,8 +27,7 @@ public class ObjectsManager {
             return;
         }
 
-        // Start process to migrate data (dynamic deployment)
-
+        migrationManager.migrate((StatefulSet) obj, nodeLocation);
     }
 
     private boolean isNotRunning(HasMetadata obj) {

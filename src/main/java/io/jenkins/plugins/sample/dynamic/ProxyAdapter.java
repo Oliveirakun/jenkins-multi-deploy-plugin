@@ -7,7 +7,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import java.util.Collections;
 
 public class ProxyAdapter {
-    private KubernetesClient client;
+    private final KubernetesClient client;
 
     public ProxyAdapter(KubernetesClient client) {
         this.client = client;

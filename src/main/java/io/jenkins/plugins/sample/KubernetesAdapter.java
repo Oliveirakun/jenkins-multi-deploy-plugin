@@ -23,8 +23,8 @@ import java.nio.file.Paths;
 import java.util.*;
 
 public class KubernetesAdapter {
-    private KubernetesClient client;
-    private List<EnvVar> varsList;
+    private final KubernetesClient client;
+    private final List<EnvVar> varsList;
 
     public KubernetesAdapter(InputStream stream) {
         Config kubeConfig = convertStreamToString(stream);
