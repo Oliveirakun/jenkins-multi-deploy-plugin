@@ -91,6 +91,10 @@ public class KubernetesAdapter {
         });
     }
 
+    public KubernetesClient getKubernetesClient() {
+        return client;
+    }
+
     private void adjustDeployment(ProjectRepo project, Deployment deployment) {
         if (!varsList.isEmpty()) {
             deployment.getSpec().getTemplate().getSpec().getContainers().forEach(container -> {

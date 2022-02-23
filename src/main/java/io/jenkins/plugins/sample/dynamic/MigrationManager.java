@@ -1,11 +1,7 @@
 package io.jenkins.plugins.sample.dynamic;
 
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.client.KubernetesClient;
-
-import java.util.Collections;
 
 public class MigrationManager {
     private final KubernetesClient client;
@@ -16,8 +12,7 @@ public class MigrationManager {
 
     public void migrate(StatefulSet stf, String nodeLocation) {
         System.out.println("Starting migration for " + stf.getMetadata().getName());
-        System.out.println("Sending command to stop proxy...");
-        sendStopToProxy();
+
         String name = stf.getMetadata().getName();
         String path = getPath(name);
         String currentNode = getCurrentNode(name);
@@ -37,31 +32,6 @@ public class MigrationManager {
 
         client.resource(stf).createOrReplace();
         System.out.println("Finished migration for " + stf.getMetadata().getName());
-    }
-
-    private void sendStopToProxy() {
-        sendCommandToProxy("curl -X PUT http://localhost:8083/v1/toogle?stop=true");
-    }
-
-    private void sendResumeToProxy(String remoteBrokerAddress) {
-        String command = String.format("curl -X PUT http://localhost:8083/v1/toogle?stop=false&broker-uri=tcp://%s",
-            remoteBrokerAddress);
-        sendCommandToProxy(command);
-    }
-
-    private void sendCommandToProxy(String command) {
-        PodList podList = client.pods().withLabels(Collections.singletonMap("role", "mqtt-proxy")).list();
-        Pod pod = podList.getItems().get(0);
-        String defaultContainer = pod.getMetadata().getAnnotations().get("kubectl.kubernetes.io/default-container");
-
-        client.pods()
-            .withName(pod.getMetadata().getName())
-            .inContainer(defaultContainer)
-            .readingInput(System.in)
-            .writingOutput(System.out)
-            .writingError(System.err)
-            .withTTY()
-            .exec("sh","-c", command);
     }
 
     private String getPath(String name) {

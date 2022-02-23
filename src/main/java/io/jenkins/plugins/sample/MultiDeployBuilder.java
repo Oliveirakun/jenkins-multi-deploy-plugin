@@ -16,6 +16,7 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import io.jenkins.plugins.sample.dynamic.ProxyManager;
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
 import org.apache.commons.lang.text.StrSubstitutor;
@@ -85,6 +86,10 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
        PrintStream logger = listener.getLogger();
        StandardUsernamePasswordCredentials credentials = findRegistryCredentials(getDockerRegistryCredentialId());
 
+       InputStream credentialsStream = new DescriptorImpl().getKubeConfig(projects.get(0).getCredentialsId());
+       ProxyManager proxyManager = new ProxyManager(credentialsStream);
+       proxyManager.sendStopCommand();
+
        ScriptBuilder scriptBuilder =  new ScriptBuilder();
        DockerAdapter dockerAdapter = new DockerAdapter(
             credentials.getUsername(),
@@ -141,10 +146,13 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
            Map<String, String> envVariables = parseEnvVariables(project.getEnvVariables());
            if (!envVariables.isEmpty()) {
                adapter.setEnvironmentVariables(project.getName(), envVariables);
+               proxyManager.addEnvVariables(envVariables);
            }
 
            adapter.deploy(project, images.get(i), finalManifest);
        }
+
+       proxyManager.sendResumeCommand();
     }
 
     private StandardUsernamePasswordCredentials findRegistryCredentials(String credentialsId) {
