@@ -16,6 +16,7 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import io.jenkins.plugins.sample.dynamic.HttpHook;
 import io.jenkins.plugins.sample.dynamic.ProxyManager;
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
@@ -39,6 +40,7 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
     private String dockerRegistryUrl;
     private String dockerRegistryCredentialId;
     private boolean skipBuild;
+    private List<HttpHook> hooks;
 
     @DataBoundConstructor
     public MultiDeployBuilder(List<ProjectRepo> projects) {
@@ -61,6 +63,10 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
         return skipBuild;
     }
 
+    public List<HttpHook> getHooks() {
+        return hooks;
+    }
+
     @DataBoundSetter
     public void setProjects(List<ProjectRepo> projects) {
         this.projects = projects;
@@ -79,6 +85,11 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
     @DataBoundSetter
     public void setSkipBuild(boolean skipBuild) {
         this.skipBuild = skipBuild;
+    }
+
+    @DataBoundSetter
+    public void setHooks(List<HttpHook> hooks) {
+        this.hooks = hooks;
     }
 
     @Override
@@ -262,6 +273,14 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
                     items.add(node.getKey(), value);
                 }
             }
+
+            return items;
+        }
+
+        public ListBoxModel doFillMethodItems() throws IOException {
+            ListBoxModel items = new ListBoxModel();
+            items.add("Put","put");
+            items.add("Post","post");
 
             return items;
         }
