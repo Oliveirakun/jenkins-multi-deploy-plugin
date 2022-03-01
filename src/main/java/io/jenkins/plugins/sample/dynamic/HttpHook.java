@@ -3,6 +3,10 @@ package io.jenkins.plugins.sample.dynamic;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
 public class HttpHook {
     private String method;
     private String payload;
@@ -48,5 +52,20 @@ public class HttpHook {
     @DataBoundSetter
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public Map<String,String> getMapOfHeaders() {
+        Map<String,String> mapHeaders = new HashMap<>();
+        Arrays.stream(headers.split("\n")).forEach(env -> {
+            if (env.isEmpty())
+                return;
+
+            String[] param = env.split(":", 2);
+            String key = param[0];
+            String value = param[1];
+            mapHeaders.put(key, value);
+        });
+
+        return mapHeaders;
     }
 }

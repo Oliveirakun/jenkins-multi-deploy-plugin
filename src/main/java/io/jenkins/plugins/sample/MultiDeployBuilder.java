@@ -17,6 +17,7 @@ import hudson.tasks.Builder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import io.jenkins.plugins.sample.dynamic.HttpHook;
+import io.jenkins.plugins.sample.dynamic.HttpHookManager;
 import io.jenkins.plugins.sample.dynamic.ProxyManager;
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
@@ -163,7 +164,7 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
            adapter.deploy(project, images.get(i), finalManifest);
        }
 
-       proxyManager.sendResumeCommand();
+       proxyManager.sendResumeCommand(hooks);
     }
 
     private StandardUsernamePasswordCredentials findRegistryCredentials(String credentialsId) {
@@ -279,6 +280,7 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
 
         public ListBoxModel doFillMethodItems() throws IOException {
             ListBoxModel items = new ListBoxModel();
+            items.add("Get","get");
             items.add("Put","put");
             items.add("Post","post");
 

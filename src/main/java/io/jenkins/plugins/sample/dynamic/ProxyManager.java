@@ -8,6 +8,7 @@ import io.jenkins.plugins.sample.KubernetesAdapter;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ProxyManager {
@@ -31,11 +32,14 @@ public class ProxyManager {
         proxyStopped = true;
     }
 
-    public void sendResumeCommand() {
+    public void sendResumeCommand(List<HttpHook> hooks) {
        if (!proxyStopped) {
            return;
        }
 
+       System.out.println("Executing hooks");
+       new HttpHookManager(hooks).execute();
+       
        System.out.println("Sending resume command to proxy");
        String remoteBrokerAddress = envVariables.get("REMOTE_MQTT_BROKER");
        resumeSendingData(remoteBrokerAddress);
