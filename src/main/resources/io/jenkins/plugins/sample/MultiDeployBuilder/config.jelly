@@ -36,18 +36,12 @@
             <f:checkbox/>
         </f:entry>
         <f:section title="Hooks">
-            <f:repeatable var="hookList" name="hooks" items="${instance.hooks}" minimum="0">
-                <f:entry name="method" title="HTTP Method" field="method">
-                    <f:select value="${hookList.method}"/>
+            <f:repeatable var="hook" name="hooks" items="${instance.hooks}" minimum="0">
+                <f:entry name="podLabel" title="Pod Label" field="podLabel">
+                    <f:textbox value="${hook.podLabel}" default=""/>
                 </f:entry>
-                <f:entry title="URL" field="url">
-                    <f:textbox value="${hookList.url}" default="" />
-                </f:entry>
-                <f:entry field="headers" title="HTTP Headers">
-                    <f:textarea value="${hookList.headers}"/>
-                </f:entry>
-                <f:entry field="payload" title="Payload">
-                    <f:textarea value="${hookList.payload}"/>
+                <f:entry field="command" title="Command to run inside Pod">
+                    <f:textarea value="${hook.command}"/>
                 </f:entry>
                 <f:repeatableDeleteButton />
             </f:repeatable>

@@ -18,7 +18,7 @@ public class ProxyManager {
 
     public ProxyManager(InputStream stream) {
         client = new KubernetesAdapter(stream).getKubernetesClient();
-        envVariables = new HashMap<String, String>();
+        envVariables = new HashMap<>();
     }
 
     public void sendStopCommand() {
@@ -38,8 +38,8 @@ public class ProxyManager {
        }
 
        System.out.println("Executing hooks");
-       new HttpHookManager(hooks).execute();
-       
+       new HttpHookManager(hooks, client).execute();
+
        System.out.println("Sending resume command to proxy");
        String remoteBrokerAddress = envVariables.get("REMOTE_MQTT_BROKER");
        resumeSendingData(remoteBrokerAddress);

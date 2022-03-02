@@ -1,6 +1,5 @@
 package io.jenkins.plugins.sample.dynamic;
 
-import com.google.crypto.tink.subtle.Random;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;

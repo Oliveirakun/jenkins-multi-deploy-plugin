@@ -278,15 +278,6 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
             return items;
         }
 
-        public ListBoxModel doFillMethodItems() throws IOException {
-            ListBoxModel items = new ListBoxModel();
-            items.add("Get","get");
-            items.add("Put","put");
-            items.add("Post","post");
-
-            return items;
-        }
-
         @Override
         public boolean isApplicable(Class<? extends AbstractProject> aClass) {
             return true;
