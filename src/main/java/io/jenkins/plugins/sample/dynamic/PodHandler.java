@@ -33,7 +33,8 @@ public class PodHandler {
     }
 
     public void downloadDataFromNode() {
-        Path downloadToPath = new File("/").toPath();
+        String pathName = String.format("%s","/");
+        Path downloadToPath = new File(pathName).toPath();
 
         client.pods()
             .withName(podName)
