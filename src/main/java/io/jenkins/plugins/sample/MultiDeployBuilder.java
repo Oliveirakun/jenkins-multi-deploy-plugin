@@ -17,7 +17,6 @@ import hudson.tasks.Builder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import io.jenkins.plugins.sample.dynamic.HttpHook;
-import io.jenkins.plugins.sample.dynamic.HttpHookManager;
 import io.jenkins.plugins.sample.dynamic.ProxyManager;
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
@@ -94,8 +93,9 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
     }
 
     @Override
-    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
+    public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
        PrintStream logger = listener.getLogger();
+       FilePath workspace = build.getWorkspace();
        StandardUsernamePasswordCredentials credentials = findRegistryCredentials(getDockerRegistryCredentialId());
 
        InputStream credentialsStream = new DescriptorImpl().getKubeConfig(projects.get(0).getCredentialsId());
@@ -165,6 +165,7 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
        }
 
        proxyManager.sendResumeCommand(hooks);
+       return true;
     }
 
     private StandardUsernamePasswordCredentials findRegistryCredentials(String credentialsId) {
