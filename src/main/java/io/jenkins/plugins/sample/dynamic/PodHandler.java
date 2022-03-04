@@ -14,6 +14,7 @@ public class PodHandler {
     private final String node;
     private final String hostVolumePath;
     private final String podName;
+    private static final String PREFIX_PATH = "/tmp/data-migration";
 
     public PodHandler(KubernetesClient client, String node, String hostVolumePath) {
         this.client = client;
@@ -33,8 +34,7 @@ public class PodHandler {
     }
 
     public void downloadDataFromNode() {
-        String pathName = String.format("%s","/");
-        Path downloadToPath = new File(pathName).toPath();
+        Path downloadToPath = new File(PREFIX_PATH).toPath();
 
         client.pods()
             .withName(podName)
@@ -43,7 +43,8 @@ public class PodHandler {
     }
 
     public void uploadDataToNode() {
-        File directoryToUpload = new File(hostVolumePath);
+        String pathName = String.format("%s%s",PREFIX_PATH, hostVolumePath);
+        File directoryToUpload = new File(pathName);
 
         client.pods()
             .withName(podName)

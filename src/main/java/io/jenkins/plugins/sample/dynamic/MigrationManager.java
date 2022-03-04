@@ -3,6 +3,8 @@ package io.jenkins.plugins.sample.dynamic;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.client.KubernetesClient;
 
+import java.util.concurrent.TimeUnit;
+
 public class MigrationManager {
     private final KubernetesClient client;
 
@@ -60,7 +62,12 @@ public class MigrationManager {
     }
 
     private void deleteStatefulSet(StatefulSet stf) {
-        String name = stf.getMetadata().getName();
-        client.apps().statefulSets().withName(name).delete();
+        try {
+            String name = stf.getMetadata().getName();
+            client.apps().statefulSets().withName(name).delete();
+            client.apps().statefulSets().withName(name).waitUntilCondition(stfSet -> stfSet == null, 30, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }

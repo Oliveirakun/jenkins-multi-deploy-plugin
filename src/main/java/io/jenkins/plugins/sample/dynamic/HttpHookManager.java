@@ -35,7 +35,7 @@ public class HttpHookManager {
 
         System.out.println("Waiting for pod to be ready: " + hook.getPodLabel());
         Pod pod = podList.getItems().get(0);
-        client.pods().withName(pod.getMetadata().getName()).waitUntilReady(30, TimeUnit.SECONDS);
+        client.pods().withName(pod.getMetadata().getName()).waitUntilReady(60, TimeUnit.SECONDS);
 
         System.out.println("Executing command for pod: " + hook.getPodLabel());
         client.pods()
