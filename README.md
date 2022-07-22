@@ -24,6 +24,17 @@ To run unit tests, execute:
 $ mvn test 
 ``
 
+To generate a package to deploy on Jenkins, execute:
+
+``
+$ mvn install
+``
+
+After execute the command above, you may find the file `multideploy.hpi` inside `target` folder. 
+Deploy this file on your Jenkins instance.
+
+## How to use
+
 To use this plugin, you need first a git repository containing kubernetes manifest files, with all projects separated by directory. You can follow 
 the same layout in [swamp-simulator](https://github.com/Oliveirakun/swamp-simulator-manifests) repository.
 

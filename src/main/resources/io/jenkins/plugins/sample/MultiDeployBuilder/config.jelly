@@ -35,5 +35,16 @@
         <f:entry field="skipBuild" title="Skip Build">
             <f:checkbox/>
         </f:entry>
+        <f:section title="Hooks">
+            <f:repeatable var="hook" name="hooks" items="${instance.hooks}" minimum="0">
+                <f:entry name="podLabel" title="Pod Label" field="podLabel">
+                    <f:textbox value="${hook.podLabel}" default=""/>
+                </f:entry>
+                <f:entry field="command" title="Command to run inside Pod">
+                    <f:textarea value="${hook.command}"/>
+                </f:entry>
+                <f:repeatableDeleteButton />
+            </f:repeatable>
+        </f:section>
     </f:advanced>
 </j:jelly>

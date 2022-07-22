@@ -5,10 +5,12 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Node;
 import io.fabric8.kubernetes.api.model.NodeList;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable;
+import io.jenkins.plugins.sample.dynamic.ObjectsManager;
 import org.apache.commons.io.IOUtils;
 
 import java.io.File;
@@ -21,8 +23,8 @@ import java.nio.file.Paths;
 import java.util.*;
 
 public class KubernetesAdapter {
-    private KubernetesClient client;
-    private List<EnvVar> varsList;
+    private final KubernetesClient client;
+    private final List<EnvVar> varsList;
 
     public KubernetesAdapter(InputStream stream) {
         Config kubeConfig = convertStreamToString(stream);
@@ -59,16 +61,18 @@ public class KubernetesAdapter {
             ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata> config =
                     client.load(inputStream);
 
+            ObjectsManager manager = new ObjectsManager(client);
             config.get().forEach(obj -> {
                 if (obj.getKind().equals("Deployment")) {
                     Deployment deployment = (Deployment) obj;
                     adjustDeployment(project, deployment);
-
-                    client.resource(deployment).delete();
-                    client.resource(deployment).createOrReplace();
+                    manager.processAndDeploy(deployment, project.getNodeLocation());
+                } else if (obj.getKind().equals("StatefulSet")) {
+                    StatefulSet stf = (StatefulSet) obj;
+                    adjustStatefulSet(project, stf);
+                    manager.processAndDeploy(stf, project.getNodeLocation());
                 } else {
-                    client.resource(obj).delete();
-                    client.resource(obj).createOrReplace();
+                    manager.processAndDeploy(obj, project.getNodeLocation());
                 }
             });
         } catch (IOException e) {
@@ -87,6 +91,10 @@ public class KubernetesAdapter {
         });
     }
 
+    public KubernetesClient getKubernetesClient() {
+        return client;
+    }
+
     private void adjustDeployment(ProjectRepo project, Deployment deployment) {
         if (!varsList.isEmpty()) {
             deployment.getSpec().getTemplate().getSpec().getContainers().forEach(container -> {
@@ -99,6 +107,20 @@ public class KubernetesAdapter {
 
         Map<String,String> selector = Collections.singletonMap("location", project.getNodeLocation());
         deployment.getSpec().getTemplate().getSpec().setNodeSelector(selector);
+    }
+
+    private void adjustStatefulSet(ProjectRepo project, StatefulSet stf) {
+        if (!varsList.isEmpty()) {
+            stf.getSpec().getTemplate().getSpec().getContainers().forEach(container -> {
+                container.setEnv(varsList);
+            });
+        }
+        if (project.isOnEdge()) {
+            stf.getSpec().getTemplate().getSpec().setHostNetwork(true);
+        }
+
+        Map<String,String> selector = Collections.singletonMap("location", project.getNodeLocation());
+        stf.getSpec().getTemplate().getSpec().setNodeSelector(selector);
     }
 
     private Config convertStreamToString(InputStream stream) {

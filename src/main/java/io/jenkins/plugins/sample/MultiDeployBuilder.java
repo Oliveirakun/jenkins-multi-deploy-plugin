@@ -16,6 +16,8 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import io.jenkins.plugins.sample.dynamic.HttpHook;
+import io.jenkins.plugins.sample.dynamic.ProxyManager;
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
 import org.apache.commons.lang.text.StrSubstitutor;
@@ -38,6 +40,7 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
     private String dockerRegistryUrl;
     private String dockerRegistryCredentialId;
     private boolean skipBuild;
+    private List<HttpHook> hooks;
 
     @DataBoundConstructor
     public MultiDeployBuilder(List<ProjectRepo> projects) {
@@ -60,6 +63,10 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
         return skipBuild;
     }
 
+    public List<HttpHook> getHooks() {
+        return hooks;
+    }
+
     @DataBoundSetter
     public void setProjects(List<ProjectRepo> projects) {
         this.projects = projects;
@@ -80,10 +87,20 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
         this.skipBuild = skipBuild;
     }
 
+    @DataBoundSetter
+    public void setHooks(List<HttpHook> hooks) {
+        this.hooks = hooks;
+    }
+
     @Override
-    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
+    public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
        PrintStream logger = listener.getLogger();
+       FilePath workspace = build.getWorkspace();
        StandardUsernamePasswordCredentials credentials = findRegistryCredentials(getDockerRegistryCredentialId());
+
+       InputStream credentialsStream = new DescriptorImpl().getKubeConfig(projects.get(0).getCredentialsId());
+       ProxyManager proxyManager = new ProxyManager(credentialsStream);
+       proxyManager.sendStopCommand();
 
        ScriptBuilder scriptBuilder =  new ScriptBuilder();
        DockerAdapter dockerAdapter = new DockerAdapter(
@@ -141,10 +158,14 @@ public class MultiDeployBuilder extends Builder implements SimpleBuildStep {
            Map<String, String> envVariables = parseEnvVariables(project.getEnvVariables());
            if (!envVariables.isEmpty()) {
                adapter.setEnvironmentVariables(project.getName(), envVariables);
+               proxyManager.addEnvVariables(envVariables);
            }
 
            adapter.deploy(project, images.get(i), finalManifest);
        }
+
+       proxyManager.sendResumeCommand(hooks);
+       return true;
     }
 
     private StandardUsernamePasswordCredentials findRegistryCredentials(String credentialsId) {
