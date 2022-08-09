@@ -7,8 +7,9 @@ possibility to deploy applications to cloud, fog or mist. This project was creat
 
 ## Requirements
 
-- Java 8
+- Java >= 8
 - Maven >= 3.8
+- Jenkins >= 2.289.1
 
 ## Getting started
 
