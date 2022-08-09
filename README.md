@@ -3,7 +3,7 @@
 ## Introduction
 
 Multi deploy is a Jenkins plugin that brings DevOps to IoT world, offering the
-possibility to deploy applications to cloud, fog or mist. This project was created as part of my masters dissertation. 
+possibility to deploy applications to cloud, fog or mist. This project was created as part of my master's thesis.
 
 ## Requirements
 
@@ -38,10 +38,26 @@ Deploy this file on your Jenkins instance.
 To use this plugin, you need first a git repository containing kubernetes manifest files, with all projects separated by directory. You can follow 
 the same layout in [swamp-simulator](https://github.com/Oliveirakun/swamp-simulator-manifests) repository.
 
-With this plugin you can configure an application composed by many projects/services and choose where each service will be deployed. You also need to configure a docker registry to store your docker images, before configure the services.
-In the image below, you can see an example:
+With this plugin you can configure an application composed by many projects/services and choose where each service will be deployed.
+You also need to configure a docker registry to store your docker images, before configure the services.
 
-![Example](doc/images/jenkins-matopiba-1.png)
+## Diagrams
+
+Diagram to illustrate how this project was used to deploy [SWAMP](http://swamp-project.org) project:
+
+![SWAMP](doc/images/devops-flow.png)
+
+## Screenshots
+
+Dashboard:
+
+![Dashboard](doc/images/jenkins-dashboard.png)
+
+
+Configuration for MATOPIBA pilot:
+
+![MATOPIBA Configuration](doc/images/jenkins-matopiba-1.png)
+
 
 ## LICENSE
 
