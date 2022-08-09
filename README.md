@@ -43,18 +43,18 @@ You also need to configure a docker registry to store your docker images, before
 
 ## Diagrams
 
-Diagram to illustrate how this project was used to deploy [SWAMP](http://swamp-project.org) project:
+Diagram to illustrate how Jenkins with this plugin was used to deploy [SWAMP](http://swamp-project.org) project:
 
 ![SWAMP](doc/images/devops-flow.png)
 
 ## Screenshots
 
-Dashboard:
+#### Dashboard:
 
 ![Dashboard](doc/images/jenkins-dashboard.png)
+<br/> <br/>
 
-
-Configuration for MATOPIBA pilot:
+#### Configuration for MATOPIBA pilot:
 
 ![MATOPIBA Configuration](doc/images/jenkins-matopiba-1.png)
 
