@@ -3,7 +3,7 @@
 ## Introduction
 
 Multi deploy is a Jenkins plugin that brings DevOps to IoT world, offering the
-possibility to deploy applications to cloud, fog or mist. This project was created as part of my master's thesis.
+possibility to deploy applications to cloud, fog or mist. This project was created as part of my master's thesis, that was also published as a [paper](https://www.sciencedirect.com/science/article/abs/pii/S2542660524002890?via%3Dihub)
 
 ## Requirements
 
